@@ -1,0 +1,55 @@
+# Node.js
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependency directories
+/.pnp
+.pnp.js
+
+# Build files
+/build
+/dist
+/out
+
+# Database
+/data
+/*.sqlite
+/*.sqlite3
+
+# Vercel
+.vercel
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Debugging
+.vscode/
+.idea/
+*.swp
+
+# Cloudinary/Uploads
+/uploads
+
+# Ignore test coverage
+/coverage
+
+# Ignore local runtime files
+/.next
+/.nuxt
+
+# Ignore TypeScript build files
+*.tsbuildinfo
