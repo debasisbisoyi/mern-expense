@@ -9,11 +9,12 @@ import AddIncomeForm from "../../components/income/AddIncomeForm";
 import { toast } from "react-hot-toast";
 import IncomeList from "../../components/income/IncomeList";
 import DeleteAlert from "../../components/DeleteAlert";
+import Loader from "../../components/Loader";
 
 const Income = () => {
   useUserAuth();
   const [incomeData, setIncomeData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set initial loading state to true
   const [openDeleteAlert, setOpenDeleteAlert] = useState({
     show: false,
     data: null,
@@ -21,24 +22,21 @@ const Income = () => {
   const [openAddIncomeModal, setOpenAddIncomeModal] = useState(false);
 
   const fetchIncomeDetails = async () => {
-    if (loading) return;
-    setLoading(true);
     try {
       const response = await axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME);
       console.log("Fetched income data:", response.data);
 
-      // Ensure the response has the correct structure
       if (response.data && Array.isArray(response.data.incomes)) {
         setIncomeData(response.data.incomes);
       } else {
         console.error("Unexpected API response format:", response.data);
-        setIncomeData([]); // Fallback to an empty array
+        setIncomeData([]);
       }
     } catch (error) {
       console.log("Something went wrong", error);
-      setIncomeData([]); // Handle errors gracefully
+      setIncomeData([]);
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading is set to false after fetching
     }
   };
 
@@ -61,7 +59,7 @@ const Income = () => {
     }
 
     try {
-      const response = await axiosInstance.post(API_PATHS.INCOME.ADD_INCOME, {
+      await axiosInstance.post(API_PATHS.INCOME.ADD_INCOME, {
         source,
         amount,
         date,
@@ -74,11 +72,10 @@ const Income = () => {
       console.error("Error adding income", error);
     }
   };
+
   const deleteIncome = async (id) => {
     try {
-      const response = await axiosInstance.delete(
-        API_PATHS.INCOME.DELETE_INCOME(id)
-      );
+      await axiosInstance.delete(API_PATHS.INCOME.DELETE_INCOME(id));
       setOpenDeleteAlert({ show: false, data: null });
       toast.success("Income deleted successfully");
       fetchIncomeDetails();
@@ -86,19 +83,12 @@ const Income = () => {
       console.error("Error deleting income", error);
     }
   };
-  
+
   const handleDownloadIncomeDetails = async () => {
     try {
-      const response = await axiosInstance.get(
-        API_PATHS.INCOME.DOWNLOAD_INCOME,
-        {
-          responseType: "blob",
-        }
-      );
-
-      console.log("Response:", response);
-      console.log("Response Headers:", response.headers);
-      console.log("Blob Type:", response.data.type);
+      const response = await axiosInstance.get(API_PATHS.INCOME.DOWNLOAD_INCOME, {
+        responseType: "blob",
+      });
 
       if (!response.data || response.data.size === 0) {
         toast.error("Received empty file. Please try again.");
@@ -110,7 +100,6 @@ const Income = () => {
       const link = document.createElement("a");
       link.href = url;
 
-      // Extract filename correctly from headers
       const contentDisposition = response.headers["content-disposition"];
       const filename = contentDisposition
         ? contentDisposition.split("filename=")[1]?.replace(/['"]/g, "") ||
@@ -121,7 +110,6 @@ const Income = () => {
       document.body.appendChild(link);
       link.click();
 
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
@@ -134,27 +122,29 @@ const Income = () => {
 
   useEffect(() => {
     fetchIncomeDetails();
-    return () => {};
   }, []);
 
   return (
     <DashboardLayout activeMenu="Income">
       <div className="my-5 mx-auto">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="">
+        {loading ? (
+          <div className="flex justify-center items-center h-screen">
+            <Loader />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
             <IncomeOverview
               transactions={incomeData}
               onAddIncome={() => setOpenAddIncomeModal(true)}
             />
+            <IncomeList
+              transactions={incomeData}
+              onDelete={(id) => setOpenDeleteAlert({ show: true, data: id })}
+              onDownload={handleDownloadIncomeDetails}
+            />
           </div>
-          <IncomeList
-            transactions={incomeData}
-            onDelete={(id) => {
-              setOpenDeleteAlert({ show: true, data: id });
-            }}
-            onDownload={handleDownloadIncomeDetails}
-          />
-        </div>
+        )}
+        
         <Modal
           isOpen={openAddIncomeModal}
           onClose={() => setOpenAddIncomeModal(false)}
@@ -162,6 +152,7 @@ const Income = () => {
         >
           <AddIncomeForm onAddIncome={handleAddIncome} />
         </Modal>
+
         <Modal
           isOpen={openDeleteAlert.show}
           onClose={() => setOpenDeleteAlert({ show: false, data: null })}

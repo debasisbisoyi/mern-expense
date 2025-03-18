@@ -57,6 +57,18 @@ export const getDashboardData = async (req, res) => {
       ),
     ].sort((a, b) => b.date - a.date);
 
+    // All Transactions (Income & Expense) sorted by date
+    const allTransactions = [
+      ...(await Income.find({ userId }).sort({ date: -1 })).map((txn) => ({
+        ...txn.toObject(),
+        type: "income",
+      })),
+      ...(await Expense.find({ userId }).sort({ date: -1 })).map((txn) => ({
+        ...txn.toObject(),
+        type: "expense",
+      })),
+    ].sort((a, b) => b.date - a.date);
+
     // Final response
     res.json({
       totalBalance:
@@ -72,6 +84,7 @@ export const getDashboardData = async (req, res) => {
         total: incomeLast30d,
         transaction: last30dIncomeTransactions,
       },
+      allTransactions:allTransactions, // ✅ Added this field for all transactions sorted by date
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
