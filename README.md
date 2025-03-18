@@ -8,6 +8,10 @@ A full-stack expense tracker application that allows users to manage their incom
 
  https://mern-expense.vercel.app/
 
+demo user 
+email: user@user.com
+pass: user1234
+
 
 ## Features
 
