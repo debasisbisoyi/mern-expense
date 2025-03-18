@@ -29,8 +29,6 @@ const Home = () => {
         `${API_PATHS.DASHBOARD.GET_DATA}`
       );
 
-      console.log(response);
-
       if (response.data) {
         setDashboardData(response.data);
       }
